@@ -19,7 +19,9 @@
   "scripts": {
     "demo": "node server.mjs",
     "prepare:static-deploy": "node scripts/prepare-static-deploy.mjs",
-    "prepare:cloudflare-pages": "node scripts/prepare-static-deploy.mjs"
+    "prepare:cloudflare-pages": "node scripts/prepare-static-deploy.mjs",
+    "deploy:cloudflare-workers": "wrangler deploy",
+    "deploy:cloudflare-workers:preview": "wrangler versions upload"
   },
   "keywords": [
     "demucs",
@@ -44,6 +46,9 @@
   },
   "peerDependencies": {
     "onnxruntime-web": ">=1.17.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.72.0"
   },
   "engines": {
     "node": ">=16.0.0"

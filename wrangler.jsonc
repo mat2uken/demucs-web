@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "demucs-web",
+  "compatibility_date": "2026-03-12",
+  "assets": {
+    "directory": "./deploy-cloudflare-pages",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}
