@@ -1,3 +1,6 @@
 node_modules/
 *.onnx
 .DS_Store
+deploy-cloudflare-pages/
+server.log
+server.err

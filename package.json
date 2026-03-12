@@ -17,7 +17,9 @@
     "LICENSE"
   ],
   "scripts": {
-    "demo": "python3 -m http.server 8080"
+    "demo": "node server.mjs",
+    "prepare:static-deploy": "node scripts/prepare-static-deploy.mjs",
+    "prepare:cloudflare-pages": "node scripts/prepare-static-deploy.mjs"
   },
   "keywords": [
     "demucs",

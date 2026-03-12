@@ -24,11 +24,11 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
         .drop-zone {
+            position: relative;
             border: 2px dashed rgba(255, 255, 255, 0.3);
             border-radius: 12px;
             padding: 3rem;
             text-align: center;
-            cursor: pointer;
             transition: all 0.3s ease;
         }
         .drop-zone:hover, .drop-zone.dragover {
@@ -36,7 +36,44 @@
             background: rgba(100, 255, 218, 0.05);
         }
         .drop-zone-icon { font-size: 3rem; margin-bottom: 1rem; }
-        input[type="file"] { display: none; }
+        .file-picker-row {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        .file-picker-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 180px;
+            padding: 0.8rem 1.25rem;
+            border-radius: 999px;
+            border: 1px solid rgba(100, 255, 218, 0.4);
+            background: rgba(100, 255, 218, 0.12);
+            color: #64ffda;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .file-picker-btn:hover {
+            background: rgba(100, 255, 218, 0.2);
+            transform: translateY(-1px);
+        }
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        .file-hint {
+            color: #8892b0;
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+        }
         .btn {
             background: linear-gradient(135deg, #64ffda 0%, #48c6ef 100%);
             color: #1a1a2e;
@@ -144,8 +181,19 @@
             <div class="drop-zone" id="dropZone">
                 <div class="drop-zone-icon">🎵</div>
                 <p>拖放音訊檔案到這裡</p>
-                <p style="color: #8892b0; margin-top: 0.5rem;">或點擊選擇檔案</p>
-                <input type="file" id="fileInput" accept="audio/*">
+                <p style="color: #8892b0; margin-top: 0.5rem;">或使用下方按鈕選擇檔案</p>
+                <div class="file-picker-row">
+                    <label class="file-picker-btn" for="fileInput">
+                        選擇音訊檔案
+                        <input
+                            type="file"
+                            id="fileInput"
+                            class="file-input"
+                            accept=".wav,.mp3,.m4a,.aac,.flac,.ogg,.opus,.webm,audio/*"
+                        >
+                    </label>
+                </div>
+                <p class="file-hint">建議格式: WAV, MP3, M4A, AAC。Ogg / FLAC / Opus / WebM 取決於瀏覽器解碼能力。</p>
                 <p id="audioFileName"></p>
             </div>
         </div>
