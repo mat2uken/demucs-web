@@ -2,6 +2,7 @@ import * as ort from 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.21.0/dist/o
 import { DemucsProcessor, CONSTANTS } from '../src/index.js';
 
 const { SAMPLE_RATE, DEFAULT_MODEL_URL } = CONSTANTS;
+const MODEL_PROXY_URL = '/model/htdemucs_embedded.onnx';
 const LOCAL_MODEL_URL = '../models/htdemucs_embedded.onnx';
 
 let processor = null;
@@ -83,11 +84,16 @@ async function initProcessor() {
 
   try {
     try {
-      post('status', { text: '從 Hugging Face 下載模型中 (約 172MB)...' });
-      await processor.loadModel(DEFAULT_MODEL_URL);
+      post('status', { text: '透過同網域代理載入模型中 (約 172MB)...' });
+      await processor.loadModel(MODEL_PROXY_URL);
     } catch {
-      post('status', { text: '載入本地模型...' });
-      await processor.loadModel(LOCAL_MODEL_URL);
+      try {
+        post('status', { text: '載入本地模型...' });
+        await processor.loadModel(LOCAL_MODEL_URL);
+      } catch {
+        post('status', { text: '從 Hugging Face 下載模型中 (約 172MB)...' });
+        await processor.loadModel(DEFAULT_MODEL_URL);
+      }
     }
 
     modelReady = true;

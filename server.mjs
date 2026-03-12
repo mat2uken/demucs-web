@@ -8,6 +8,9 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = __dirname;
+const modelProxyPath = '/model/htdemucs_embedded.onnx';
+const modelFilePath = path.join(rootDir, 'models', 'htdemucs_embedded.onnx');
+const defaultModelUrl = 'https://huggingface.co/timcsy/demucs-web-onnx/resolve/main/htdemucs_embedded.onnx';
 const requestedPort = Number(process.env.PORT || 8080);
 const hasExplicitPort = Boolean(process.env.PORT);
 let currentPort = requestedPort;
@@ -88,6 +91,51 @@ async function serveFile(filePaths, res) {
   res.end('Not Found');
 }
 
+async function proxyModel(req, res) {
+  try {
+    const localStats = await fs.stat(modelFilePath).catch(() => null);
+    if (localStats) {
+      if (req.method === 'HEAD') {
+        sendHeaders(res, 200, {
+          'Content-Length': localStats.size,
+          'Content-Type': 'application/octet-stream',
+        });
+        res.end();
+        return;
+      }
+
+      await streamFile(modelFilePath, res);
+      return;
+    }
+
+    const upstream = await fetch(defaultModelUrl, {
+      method: req.method === 'HEAD' ? 'HEAD' : 'GET',
+    });
+    const headers = {
+      'Content-Type': upstream.headers.get('content-type') || 'application/octet-stream',
+    };
+    const contentLength = upstream.headers.get('content-length');
+    if (contentLength) {
+      headers['Content-Length'] = contentLength;
+    }
+
+    sendHeaders(res, upstream.status, headers);
+
+    if (req.method === 'HEAD' || !upstream.body) {
+      res.end();
+      return;
+    }
+
+    for await (const chunk of upstream.body) {
+      res.write(chunk);
+    }
+    res.end();
+  } catch (error) {
+    sendHeaders(res, 502, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end(`Model proxy failed: ${error.message}`);
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   if (!req.url) {
     sendHeaders(res, 400, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -96,6 +144,10 @@ const server = http.createServer(async (req, res) => {
   }
 
   const requestUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  if (requestUrl.pathname === modelProxyPath) {
+    await proxyModel(req, res);
+    return;
+  }
   const filePaths = resolveRequestPaths(requestUrl.pathname);
   await serveFile(filePaths, res);
 });

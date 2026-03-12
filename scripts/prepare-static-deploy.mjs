@@ -34,44 +34,10 @@ async function main() {
     replacements
   );
 
-  const workerReplacements = [
-    ...replacements,
-    ["const LOCAL_MODEL_URL = './models/htdemucs_embedded.onnx';\n", ''],
-    [
-      `  try {
-    try {
-      post('status', { text: '從 Hugging Face 下載模型中 (約 172MB)...' });
-      await processor.loadModel(DEFAULT_MODEL_URL);
-    } catch {
-      post('status', { text: '載入本地模型...' });
-      await processor.loadModel(LOCAL_MODEL_URL);
-    }
-
-    modelReady = true;
-    post('model-ready');
-  } catch (error) {
-    post('error', { stage: 'init', message: error.message });
-  }
-`,
-      `  try {
-    post('status', { text: '從 Hugging Face 下載模型中 (約 172MB)...' });
-    await processor.loadModel(DEFAULT_MODEL_URL);
-    modelReady = true;
-    post('model-ready');
-  } catch (error) {
-    post('error', {
-      stage: 'init',
-      message: \`\${error.message} (Cloudflare Pages package expects the model to load from Hugging Face or another external HTTPS URL.)\`
-    });
-  }
-`
-    ],
-  ];
-
   await copyAndRewrite(
     path.join(rootDir, 'demo', 'separation-worker.js'),
     path.join(outDir, 'separation-worker.js'),
-    workerReplacements
+    replacements
   );
 
   await writeFile(
@@ -86,23 +52,21 @@ async function main() {
   );
 
   const readme = [
-    '# Cloudflare Pages Deploy Package',
+    '# Cloudflare Workers Deploy Package',
     '',
-    'This folder is prepared specifically for Cloudflare Pages.',
+    'This folder is prepared specifically for Cloudflare Workers Builds.',
     '',
-    'How to deploy with Cloudflare Pages Direct Upload:',
-    '1. Open Cloudflare Dashboard > Workers & Pages.',
-    '2. Create application > Pages > Direct Upload.',
-    '3. Upload the contents of this folder, or drag this folder itself.',
-    '4. Deploy the site.',
+    'How this folder is used:',
+    '1. The build step generates this folder.',
+    '2. Wrangler deploys the Worker and serves these files as static assets.',
     '',
     'This package does not include the 172MB ONNX model file.',
-    'Cloudflare Pages has a 25 MiB per-asset limit, so the model cannot be uploaded there as a static asset.',
-    'The app will download the model from Hugging Face instead.',
+    'Cloudflare Workers static assets have a 25 MiB per-file limit, so the model cannot be uploaded here as a static asset.',
+    'The deployed Worker proxies /model/htdemucs_embedded.onnx to Hugging Face on the same origin.',
     '',
     'Required headers:',
     '- The included _headers file sets Cross-Origin-Opener-Policy and Cross-Origin-Embedder-Policy for SharedArrayBuffer.',
-    '- Cloudflare Pages parses _headers from the static output directory.',
+    '- Cloudflare static assets parse _headers from the generated output directory.',
     '',
     'Files in this folder:',
     '- index.html',
@@ -123,17 +87,17 @@ async function main() {
     path.join(outDir, 'models', 'README.txt'),
     [
       'Optional local model location.',
-      'Cloudflare Pages cannot host the ONNX model here because Pages static assets are limited to 25 MiB per file.',
+      'Cloudflare Workers static assets cannot host the ONNX model here because static assets are limited to 25 MiB per file.',
       '',
       'Default package behavior:',
-      '- The app downloads the model from Hugging Face.',
+      '- The app calls /model/htdemucs_embedded.onnx on the same origin.',
       '- If you want to self-host the model, use Cloudflare R2 or another HTTPS object store and update separation-worker.js.',
       '',
     ].join('\n')
   );
 
   console.log(`Prepared static deploy package at: ${outDir}`);
-  console.log('Cloudflare Pages package uses the Hugging Face model URL by default.');
+  console.log('Cloudflare Workers package uses the same-origin /model proxy backed by Hugging Face.');
 }
 
 await main();
